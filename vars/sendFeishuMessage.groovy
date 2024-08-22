@@ -1,7 +1,6 @@
-def sendNotification(String status) {
-    def feishuWebhook = 'https://open.feishu.cn/open-apis/bot/v2/hook/e6d11172-ab2b-4b94-9271-7e05d4412056'
-    def statusColor = status == 'SUCCESS' ? 'green' : 'red'
-    def statusText = status == 'SUCCESS' ? '构建成功' : '构建失败'
+def call(String webhookUrl, String buildStatus, String jobName, String buildNumber, String buildUser, String duration, String startTime, String buildUrl) {
+    def statusColor = buildStatus == 'SUCCESS' ? 'green' : 'red'
+    def statusText = buildStatus == 'SUCCESS' ? '构建成功' : '构建失败'
     def message = """{
         "msg_type": "interactive",
         "card": {
@@ -17,14 +16,14 @@ def sendNotification(String status) {
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "**项目名称:** ${env.JOB_NAME}"
+                        "content": "**项目名称:** ${jobName}"
                     }
                 },
                 {
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "**构建编号:** #${env.BUILD_NUMBER}"
+                        "content": "**构建编号:** #${buildNumber}"
                     }
                 },
                 {
@@ -38,35 +37,35 @@ def sendNotification(String status) {
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "**触发者:** ${env.BUILD_USER}"
+                        "content": "**触发者:** ${buildUser}"
                     }
                 },
                 {
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "**构建时长:** ${currentBuild.durationString.replace(' and counting', '')}"
+                        "content": "**构建时长:** ${duration.replace(' and counting', '')}"
                     }
                 },
                 {
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "**开始时间:** ${new Date(currentBuild.startTimeInMillis).format('yyyy-MM-dd HH:mm:ss')}"
+                        "content": "**开始时间:** ${startTime}"
                     }
                 },
                 {
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "[查看详情](${env.BUILD_URL})"
+                        "content": "[查看详情](${buildUrl})"
                     }
                 },
                 {
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": "[构建日志](${env.BUILD_URL}console)"
+                        "content": "[构建日志](${buildUrl}console)"
                     }
                 },
                 {
@@ -84,9 +83,8 @@ def sendNotification(String status) {
     }"""
 
     sh """
-        curl -X POST ${feishuWebhook} \
+        curl -X POST ${webhookUrl} \
         -H 'Content-Type: application/json' \
         -d '${message}'
     """
 }
-
